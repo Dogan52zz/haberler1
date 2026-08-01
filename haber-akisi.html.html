@@ -1732,9 +1732,26 @@ function setPersistStatus(ok, detail) {
   }
 }
 
+// Her tarayıcıya/cihaza özel, gizlice oluşturulan bir kimlik (giriş/şifre
+// DEĞİL - kullanıcı adı sormuyor). Kaydedilenler ve okunanlar artık bu
+// kimliğe göre ayrı tutuluyor, böylece farklı bilgisayar/tarayıcıdan
+// girenler birbirinin kayıtlarını görmüyor.
+function getClientId() {
+  const STORAGE_KEY = "haberAkisiClientId";
+  let id = localStorage.getItem(STORAGE_KEY);
+  if (!id) {
+    id = (window.crypto && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : "cid-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+    localStorage.setItem(STORAGE_KEY, id);
+  }
+  return id;
+}
+const CLIENT_ID = getClientId();
+
 async function loadPersistedData() {
   try {
-    const res = await fetch("/data");
+    const res = await fetch("/data?client=" + encodeURIComponent(CLIENT_ID));
     if (!res.ok) { setPersistStatus(false, "HTTP " + res.status); return; }
     const data = await res.json();
     if (Array.isArray(data.saved)) {
@@ -1751,7 +1768,7 @@ async function loadPersistedData() {
 }
 
 function persistData() {
-  fetch("/data", {
+  fetch("/data?client=" + encodeURIComponent(CLIENT_ID), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ saved: [...savedItems.values()], read: [...readSet] }),

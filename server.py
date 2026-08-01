@@ -109,18 +109,37 @@ def load_x_config():
 
 
 def load_saved_data():
+    """Donen yapi: {"clients": {client_id: {"saved": [...], "read": [...]}}}.
+    Eski (tek kullanicili) duz format bulunursa "_legacy" anahtarina tasinir,
+    boylece guncellemeden once kaydedilen veriler kaybolmaz."""
     if os.path.exists(DATA_FILE):
         try:
             with open(DATA_FILE, "r", encoding="utf-8") as f:
                 data = json.load(f)
                 if isinstance(data, dict):
-                    return {
-                        "saved": list(data.get("saved", [])),
-                        "read": list(data.get("read", [])),
-                    }
+                    if "clients" in data and isinstance(data["clients"], dict):
+                        return {"clients": data["clients"]}
+                    if "saved" in data or "read" in data:
+                        return {
+                            "clients": {
+                                "_legacy": {
+                                    "saved": list(data.get("saved", [])),
+                                    "read": list(data.get("read", [])),
+                                }
+                            }
+                        }
         except Exception as e:
             print(f"[veri okuma hatası] {e}")
-    return {"saved": [], "read": []}
+    return {"clients": {}}
+
+
+def get_client_bucket(client_id):
+    return SAVED_DATA["clients"].get(client_id, {"saved": [], "read": []})
+
+
+def set_client_bucket(client_id, saved, read):
+    SAVED_DATA["clients"][client_id] = {"saved": list(saved), "read": list(read)}
+    write_saved_data(SAVED_DATA)
 
 
 def write_saved_data(data):
@@ -201,7 +220,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
         if parsed.path == "/proxy":
             self.handle_proxy(parsed)
         elif parsed.path == "/data":
-            self.handle_data_get()
+            self.handle_data_get(parsed)
         elif parsed.path == "/x-feed":
             self.handle_x_feed(parsed)
         elif parsed.path == "/nitter-feed":
@@ -217,27 +236,32 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             return
 
         if parsed.path == "/data":
-            self.handle_data_post()
+            self.handle_data_post(parsed)
         else:
             self.send_error(404, "Bulunamadi")
 
-    def handle_data_get(self):
-        body = json.dumps(SAVED_DATA, ensure_ascii=False).encode("utf-8")
+    def handle_data_get(self, parsed):
+        query = urllib.parse.parse_qs(parsed.query)
+        client_id = (query.get("client", [None])[0] or "_legacy").strip() or "_legacy"
+
+        bucket = get_client_bucket(client_id)
+        body = json.dumps(bucket, ensure_ascii=False).encode("utf-8")
         self.send_response(200)
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Access-Control-Allow-Origin", "*")
         self.end_headers()
         self.wfile.write(body)
 
-    def handle_data_post(self):
+    def handle_data_post(self, parsed):
+        query = urllib.parse.parse_qs(parsed.query)
+        client_id = (query.get("client", [None])[0] or "_legacy").strip() or "_legacy"
+
         try:
             length = int(self.headers.get("Content-Length", 0))
             raw = self.rfile.read(length) if length > 0 else b"{}"
             incoming = json.loads(raw.decode("utf-8") or "{}")
 
-            SAVED_DATA["saved"] = list(incoming.get("saved", []))
-            SAVED_DATA["read"] = list(incoming.get("read", []))
-            write_saved_data(SAVED_DATA)
+            set_client_bucket(client_id, incoming.get("saved", []), incoming.get("read", []))
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")
