@@ -1,0 +1,4 @@
+{
+  "_aciklama": "Bu dosyayi 'x-ayarlari.json' olarak kopyala ve bearer_token alanina X Developer Portal'dan aldigin API anahtarini yapistir. ASLA X sifreni buraya yazma, sadece API anahtari (Bearer Token) kullanilir.",
+  "bearer_token": "AAAAAAAAAAAAAAAAAAAAAOuR%2BwEAAAAAzCF%2FYD4mZ1aUizHZGfup02TXvd0%3DXdbmfjZG0OxsfAkZ7zpaW7fBGCNaPz7LOyyNvsFQQJ9YdHALmV"
+}

@@ -24,6 +24,16 @@
     --en-dim: #23403e;
     --live: #d9695f;
     --radius: 12px;
+
+    --cat-siyaset: #b294f0; --cat-siyaset-dim: #332a52;
+    --cat-cinayet: #f0736b; --cat-cinayet-dim: #4a2523;
+    --cat-dunya: #6fa8f5; --cat-dunya-dim: #23324d;
+    --cat-ekonomi: #6bcf8a; --cat-ekonomi-dim: #22402c;
+    --cat-magazin: #f28ac0; --cat-magazin-dim: #46243a;
+    --cat-spor: #f5a35c; --cat-spor-dim: #4a331f;
+    --cat-teknoloji: #5fd3e8; --cat-teknoloji-dim: #1f3d43;
+    --cat-saglik: #4fd6b0; --cat-saglik-dim: #1f4038;
+    --cat-gundem: #e0c15b; --cat-gundem-dim: #4a3f22;
   }
 
   html[data-theme="light"] {
@@ -40,6 +50,16 @@
     --en: #276f6a;
     --en-dim: #d9edea;
     --live: #b8382e;
+
+    --cat-siyaset: #6d4bc9; --cat-siyaset-dim: #eae4fa;
+    --cat-cinayet: #c4392f; --cat-cinayet-dim: #fbe3e1;
+    --cat-dunya: #2864b5; --cat-dunya-dim: #e0eafb;
+    --cat-ekonomi: #1f8a4c; --cat-ekonomi-dim: #ddf1e3;
+    --cat-magazin: #b3336f; --cat-magazin-dim: #fae3ed;
+    --cat-spor: #b5641c; --cat-spor-dim: #f7e8d8;
+    --cat-teknoloji: #1b8a9e; --cat-teknoloji-dim: #ddf1f4;
+    --cat-saglik: #1a8f70; --cat-saglik-dim: #ddf3ec;
+    --cat-gundem: #92720c; --cat-gundem-dim: #f5ecd0;
   }
 
   * { box-sizing: border-box; }
@@ -147,6 +167,7 @@
   .chip.active[data-filter="tr"]  { background: var(--tr-dim); color: var(--tr); border-color: var(--tr); }
   .chip.active[data-filter="en"]  { background: var(--en-dim); color: var(--en); border-color: var(--en); }
   .chip.active[data-filter="saved"] { background: var(--bg-raised); color: var(--text); border-color: var(--text-faint); }
+  .chip.active[data-filter="x"] { background: var(--tr-dim); color: var(--tr); border-color: var(--tr); }
 
   .toolbar-mini { display: flex; flex-direction: column; gap: 6px; }
   .mini-btn {
@@ -306,8 +327,8 @@
   .lang-tr .badge { color: var(--tr); }
   .lang-en .badge { color: var(--en); }
   .tag {
-    background: transparent; border: 1px dashed var(--panel-border); border-radius: 6px;
-    padding: 2px 8px; font-size: 10px; color: var(--text-faint); letter-spacing: .03em;
+    background: transparent; border: 1px solid var(--panel-border); border-radius: 6px;
+    padding: 2px 8px; font-size: 10px; letter-spacing: .03em; font-weight: 700;
   }
   .save-btn {
     background: none; border: 1px solid var(--panel-border); color: var(--text-faint);
@@ -500,6 +521,7 @@
         <div class="chip active" data-filter="all">Hepsi</div>
         <div class="chip" data-filter="tr">Türkçe</div>
         <div class="chip" data-filter="en">İngilizce</div>
+        <div class="chip" data-filter="x">X Haberleri</div>
         <div class="chip" data-filter="saved">Kaydedilenler (0)</div>
       </nav>
 
@@ -683,11 +705,40 @@ const EXTRA_X_ACCOUNTS = [
   { name: "Haber Global", handle: "HaberGlobal" },
   { name: "Onlar TV", handle: "tvOnlar" },
   { name: "Murat Ağırel", handle: "muratagirel" },
+  { name: "Asayiş Berkemal", handle: "asayisberkemal0" },
   { name: "Barış Pehlivan", handle: "barispehlivan" },
   { name: "Timur Soykan", handle: "timursoykan" },
   { name: "Barış Terkoğlu", handle: "baristerkoglu" },
   { name: "Şule Aydın", handle: "aydinsule1" },
 ];
+
+// X (Twitter) hesaplarını, mevcut RSS kaynaklarıyla aynı FEEDS listesine
+// "type: x" olarak ekliyoruz; böylece loadFeed/loadAll/renderSourceList gibi
+// tüm mevcut akış kodu bunları otomatik olarak da işler, ayrı bir yol
+// yazmaya gerek kalmaz. İsim sonuna " (X)" eklendi ki aynı gazetenin RSS
+// kaynağıyla karışmasın, ayrı bir kaynak olarak filtrelenip sayılabilsin.
+//
+// Nitter ücretsiz olduğu için artık kurumsal listedeki (X_ACCOUNTS) VE
+// gazeteci listesindeki (EXTRA_X_ACCOUNTS) hesapların tamamını takip
+// ediyoruz. Bu çok sayıda istek demek - sayfa ilk açılışta biraz daha
+// yavaş yüklenebilir ve topluluk Nitter sunucularına daha fazla yük
+// biner. Listeyi daraltmak istersen aşağıdaki filtreye isim ekle/çıkar.
+const X_ACCOUNTS_TO_TRACK = null; // null = hepsini takip et
+
+const allXAccounts = [
+  ...Object.entries(X_ACCOUNTS),
+  ...EXTRA_X_ACCOUNTS.map(p => [p.name, p.handle]),
+];
+
+const XFEEDS = allXAccounts
+  .filter(([name]) => X_ACCOUNTS_TO_TRACK === null || X_ACCOUNTS_TO_TRACK.includes(name))
+  .map(([name, handle]) => ({
+    name: `${name} (X)`,
+    lang: "tr",
+    type: "x",
+    handle,
+  }));
+FEEDS.push(...XFEEDS);
 
 function renderXAccountList() {
   const ul = document.getElementById("xAccountList");
@@ -745,6 +796,7 @@ let keywordQuery = "";
 let soundEnabled = true;
 
 let refreshInProgress = false;
+let initialLoadDone = false; // ilk loadAll() Promise.all'u bitene kadar false
 
 // "altın" kelimesinin "gözaltına" içinde eşleşmesi gibi yanlış alt-dize
 // eşleşmelerini önlemek için: tek kelimelik anahtar kelimelerde, eşleşmenin
@@ -759,6 +811,17 @@ function matchesWordStart(text, word) {
     if (!isLetter(text[i - 1])) return true;
     from = i + 1;
   }
+}
+
+// Her kategoriye sabit bir renk atar (CSS'teki --cat-* değişkenleriyle eşleşir).
+const CATEGORY_SLUGS = {
+  "Siyaset": "siyaset", "Cinayet": "cinayet", "Dünya": "dunya", "Ekonomi": "ekonomi",
+  "Magazin": "magazin", "Spor": "spor", "Teknoloji": "teknoloji", "Sağlık": "saglik",
+};
+function catSlug(cat) { return CATEGORY_SLUGS[cat] || "gundem"; }
+function catTagStyle(cat) {
+  const s = catSlug(cat);
+  return `background:var(--cat-${s}-dim);color:var(--cat-${s});border-color:var(--cat-${s})`;
 }
 
 function categorize(title) {
@@ -987,8 +1050,19 @@ function getFiltered() {
     if (currentFilter === "tr" || currentFilter === "en") {
       items = items.filter(it => it.lang === currentFilter);
     }
+    if (currentFilter === "x") {
+      items = items.filter(it => it.isX);
+    } else {
+      // X gönderileri sadece "X Haberleri" sekmesinde görünsün, diğer
+      // sekmelerde (Hepsi/Türkçe/İngilizce) ana listeye karışmasın.
+      items = items.filter(it => !it.isX);
+    }
     if (currentSources.size > 0) {
-      items = items.filter(it => currentSources.has(it.source));
+      // "Cumhuriyet" gibi bir kaynağa tıklandığında, hem normal RSS
+      // haberlerini hem de (X Haberleri sekmesindeyken) "Cumhuriyet (X)"
+      // hesabının gönderilerini eşleştirsin diye " (X)" ekini görmezden
+      // gelerek karşılaştırıyoruz.
+      items = items.filter(it => currentSources.has(it.source.replace(/ \(X\)$/, "")));
     }
   }
   if (currentCategory) {
@@ -1036,7 +1110,7 @@ function itemHtml(it) {
         ${it.summary ? `<p class="summary">${it.summary}</p>` : ""}
         <div class="meta">
           <span class="badge">${it.source}</span>
-          <span class="tag">${it.category}</span>
+          <span class="tag" style="${catTagStyle(it.category)}">${it.category}</span>
           <span>${timeAgo(it.pubDate)}</span>
           <button class="save-btn${isSaved ? " active" : ""}" data-key="${encKey}">${isSaved ? "★ Kaydedildi" : "☆ Kaydet"}</button>
           <button class="copy-btn" data-key="${encKey}" title="Başlığı ve linki kopyala">📋</button>
@@ -1074,7 +1148,7 @@ function groupHtml(group) {
         ${titleLinkHtml(primary)}
         ${primary.summary ? `<p class="summary">${primary.summary}</p>` : ""}
         <div class="meta">
-          <span class="tag">${primary.category}</span>
+          <span class="tag" style="${catTagStyle(primary.category)}">${primary.category}</span>
           <span>${timeAgo(primary.pubDate)}</span>
           <button class="save-btn${isSaved ? " active" : ""}" data-key="${encPrimaryKey}">${isSaved ? "★ Kaydedildi" : "☆ Kaydet"}</button>
           <button class="copy-btn" data-key="${encPrimaryKey}" title="Başlığı ve linki kopyala">📋</button>
@@ -1095,7 +1169,11 @@ function renderCategoryBar() {
     const newCount = categoryNewCounts[cat] || 0;
     const activeCls = currentCategory === cat ? " active" : "";
     const badge = newCount > 0 ? `<span class="cat-new-badge">+${newCount}</span>` : "";
-    return `<button class="cat-chip${activeCls}" data-category="${cat}">${cat} <span class="ccount">${count}</span>${badge}</button>`;
+    const s = catSlug(cat);
+    const style = currentCategory === cat
+      ? `background:var(--cat-${s}-dim);border-color:var(--cat-${s});color:var(--cat-${s})`
+      : `border-color:var(--cat-${s})`;
+    return `<button class="cat-chip${activeCls}" style="${style}" data-category="${cat}">${cat} <span class="ccount">${count}</span>${badge}</button>`;
   }).join("");
 }
 
@@ -1105,8 +1183,38 @@ function renderCategoryList() {
 
 function renderSourceList() {
   const ul = document.getElementById("sourceList");
-  ul.innerHTML = FEEDS.map(f => {
-    const count = allItems.filter(it => it.source === f.name).length;
+
+  // Aynı hesabın hem RSS hem X versiyonu varsa ("Cumhuriyet" ve
+  // "Cumhuriyet (X)" gibi) tek satırda birleştiriyoruz. Sadece X'te olan
+  // hesapları (gazeteciler vb.) de kendi satırları olarak ekliyoruz ki
+  // sol menüden onlara göre de filtreleme yapılabilsin.
+  const seen = new Set();
+  const baseFeeds = [];
+  FEEDS.forEach(f => {
+    const base = f.name.replace(/ \(X\)$/, "");
+    if (!seen.has(base)) {
+      seen.add(base);
+      // Bu isim için normal (RSS) bir kaynak var mı, yoksa sadece X'te mi var?
+      const hasRss = FEEDS.some(x => x.name === base && x.type !== "x");
+      baseFeeds.push({ name: base, lang: f.lang, hasRss });
+    }
+  });
+
+  // Sıralama: 1) Türkçe RSS kaynakları (alfabetik), 2) yabancı (İngilizce)
+  // RSS kaynakları (alfabetik), 3) sadece X'te olan hesaplar (alfabetik).
+  const groupOrder = (f) => {
+    if (f.hasRss && f.lang === "tr") return 0;
+    if (f.hasRss && f.lang === "en") return 1;
+    return 2; // sadece X'te olan hesaplar
+  };
+  baseFeeds.sort((a, b) => {
+    const g = groupOrder(a) - groupOrder(b);
+    if (g !== 0) return g;
+    return a.name.localeCompare(b.name, 'tr-TR');
+  });
+
+  ul.innerHTML = baseFeeds.map(f => {
+    const count = allItems.filter(it => it.source.replace(/ \(X\)$/, "") === f.name).length;
     const activeCls = currentSources.has(f.name) ? " active" : "";
     return `<li class="src-row lang-${f.lang}${activeCls}" data-source="${f.name}">
       <span class="sdot"></span>
@@ -1125,7 +1233,7 @@ function renderFrontPageWall() {
   if (!wall || !wall.classList.contains("open")) return;
 
   const latestBySource = {};
-  allItems.filter(it => it.lang === "tr").forEach(it => {
+  allItems.filter(it => it.lang === "tr" && !it.isX).forEach(it => {
     const cur = latestBySource[it.source];
     if (!cur || new Date(it.pubDate) > new Date(cur.pubDate)) {
       latestBySource[it.source] = it;
@@ -1153,7 +1261,7 @@ function renderFrontPageWall() {
 function renderTicker() {
   const trackList = document.getElementById("tickerList");
   const latest = [...allItems]
-    .filter(it => it.pubDate && !isNaN(new Date(it.pubDate)))
+    .filter(it => it.pubDate && !isNaN(new Date(it.pubDate)) && !it.isX)
     .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
     .slice(0, 8);
 
@@ -1168,7 +1276,7 @@ function renderTicker() {
 function renderLatestSidebar() {
   const ul = document.getElementById("latestList");
   const latest = [...allItems]
-    .filter(it => it.pubDate && !isNaN(new Date(it.pubDate)))
+    .filter(it => it.pubDate && !isNaN(new Date(it.pubDate)) && !it.isX)
     .sort((a, b) => new Date(b.pubDate) - new Date(a.pubDate))
     .slice(0, 6);
 
@@ -1186,13 +1294,15 @@ function renderLatestSidebar() {
 }
 
 function renderStats() {
-  const trCount = allItems.filter(it => it.lang === "tr").length;
-  const enCount = allItems.filter(it => it.lang === "en").length;
-  const sourcesWithItems = new Set(allItems.map(it => it.source)).size;
-  document.getElementById("statTotal").textContent = allItems.length;
+  const regularItems = allItems.filter(it => !it.isX);
+  const regularFeeds = FEEDS.filter(f => f.type !== "x");
+  const trCount = regularItems.filter(it => it.lang === "tr").length;
+  const enCount = regularItems.filter(it => it.lang === "en").length;
+  const sourcesWithItems = new Set(regularItems.map(it => it.source)).size;
+  document.getElementById("statTotal").textContent = regularItems.length;
   document.getElementById("statTr").textContent = trCount;
   document.getElementById("statEn").textContent = enCount;
-  document.getElementById("statSrc").textContent = sourcesWithItems + "/" + FEEDS.length;
+  document.getElementById("statSrc").textContent = sourcesWithItems + "/" + regularFeeds.length;
   document.getElementById("statSaved").textContent = savedItems.size;
   document.getElementById("statRead").textContent = readSet.size;
 }
@@ -1219,7 +1329,9 @@ function render() {
   if (groups.length === 0) {
     list.innerHTML = "";
     if (allItems.length > 0) {
-      document.getElementById("status").textContent = "Bu filtreyle gösterilecek haber yok.";
+      document.getElementById("status").textContent = initialLoadDone
+        ? "Bu filtreyle gösterilecek haber yok."
+        : "Yükleniyor… bu filtreye uygun haberler henüz gelmedi, biraz bekle.";
     }
   } else {
     if (allItems.length > 0) document.getElementById("status").textContent = "";
@@ -1248,7 +1360,62 @@ function timeoutPromise(ms) {
   return new Promise((_, reject) => setTimeout(() => reject(new Error("zaman aşımı")), ms));
 }
 
+// X hesaplarını, resmi (ücretli) X API yerine ücretsiz Nitter üzerinden
+// çekiyoruz - Nitter, X'in RSS beslemesini taklit ediyor, bu yüzden
+// mevcut parseRss() fonksiyonunu aynen kullanabiliyoruz. Sunucu tarafında
+// birden fazla Nitter sunucusu sırayla deneniyor (server.py'daki
+// NITTER_INSTANCES listesi), biri çökmüşse diğerine geçiliyor.
+// Not: bunlar topluluk sunucuları, garantisi yok - çalışmazsa bu kaynaklar
+// sessizce boş döner, sitenin geri kalanı etkilenmez.
+async function loadXFeed(feed) {
+  try {
+    const res = await Promise.race([
+      fetch("/nitter-feed?handle=" + encodeURIComponent(feed.handle)),
+      timeoutPromise(8000),
+    ]);
+    if (!res.ok) return { error: feed.name, reason: "HTTP " + res.status };
+    const xmlText = await res.text();
+    const items = parseRss(xmlText, feed).map(it => {
+      // X Haberleri sekmesinde tutarlı davranış için: link HER ZAMAN
+      // gerçek x.com gönderisine gitsin - gönderi içindeki gömülü linke
+      // (haber sayfası, YouTube vb.) göre değişmesin.
+      const link = nitterLinkToXLink(it.link, feed.handle);
+      return {
+        ...it,
+        link,
+        isValidLink: !!link,
+        title: cleanTweetTitle(it.title),
+        isX: true,
+        handle: feed.handle,
+      };
+    });
+    return items;
+  } catch (e) {
+    return { error: feed.name, reason: e.message || "ağ hatası" };
+  }
+}
+
+// Nitter linkini (nitter.net/handle/status/ID) gerçek X.com gönderi
+// linkine çevirir (x.com/handle/status/ID).
+function nitterLinkToXLink(nitterLink, handle) {
+  const m = (nitterLink || "").match(/status\/(\d+)/);
+  return m ? `https://x.com/${handle}/status/${m[1]}` : nitterLink;
+}
+
+// Nitter RSS başlıkları, gönderinin tüm metnini + sondaki ham linki tek
+// satırda veriyor ("Haber başlığı https://site.com/... Foto: X" gibi).
+// Bunu normal bir manşet gibi göstermek için sondaki linki temizleyip
+// makul bir uzunlukta kesiyoruz - manşet duvarı, ticker ve diğer kompakt
+// kartlarda taşmasın diye.
+function cleanTweetTitle(rawTitle) {
+  let t = rawTitle.replace(/https?:\/\/\S+/g, "").replace(/\s+/g, " ").trim();
+  if (t.length > 140) t = t.slice(0, 140).trim() + "…";
+  return t || rawTitle;
+}
+
 async function loadFeed(feed) {
+  if (feed.type === "x") return loadXFeed(feed);
+
   let lastError = "bilinmeyen hata";
   for (const buildUrl of PROXIES) {
     try {
@@ -1272,6 +1439,30 @@ function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// İlk yüklemede bazı X hesapları (Nitter'ın geçici tepkisizliği yüzünden)
+// boş kalmış olabilir. "Hiç gelmedi mi" yerine hesap bazında bakıyoruz:
+// hâlâ 0 haberi olan hesapları ayrı ayrı tespit edip sadece onları
+// tekrar deniyoruz - böylece bir-iki hesap sürekli eksik kalsa bile
+// diğerlerinin gelmiş olması yüzünden yeniden deneme durmuyor.
+async function retryXFeedsIfEmpty(attempt = 1) {
+  const xFeeds = FEEDS.filter(f => f.type === "x");
+  if (xFeeds.length === 0 || attempt > 3) return;
+
+  const missing = xFeeds.filter(f => !allItems.some(it => it.isX && it.source === f.name));
+  if (missing.length === 0) return;
+
+  await delay(20000);
+  await Promise.all(
+    missing.map(async (feed, i) => {
+      await delay(i * 150);
+      const r = await loadFeed(feed);
+      if (Array.isArray(r)) addItems(r);
+    })
+  );
+  render();
+  await retryXFeedsIfEmpty(attempt + 1);
+}
+
 async function loadAll() {
   let completed = 0;
   renderSourceList();
@@ -1287,18 +1478,25 @@ async function loadAll() {
       } else {
         console.warn(`${r.error} (${r.reason})`);
       }
-      document.getElementById("status").textContent = completed < FEEDS.length
-        ? `Yükleniyor… (${completed}/${FEEDS.length} kaynak tamamlandı)`
-        : "";
+      if (completed < FEEDS.length) {
+        document.getElementById("status").textContent = `Yükleniyor… (${completed}/${FEEDS.length} kaynak tamamlandı)`;
+      }
     })
   );
+
+  initialLoadDone = true;
+  render();
+  retryXFeedsIfEmpty();
 
   if (allItems.length === 0) {
     document.getElementById("status").textContent = "Hiçbir kaynaktan haber çekilemedi. Daha sonra tekrar deneyebilirsin.";
   }
 
   // İlk yüklemeden sonra otomatik yenilemeyi başlat (5 dakikada bir)
-  setInterval(refreshFeeds, 2 * 60 * 1000);
+  // 2 dakika yerine 10 dakikada bir: ~50 X hesabına sık sık istek atmak
+  // Nitter sunucularını yoruyor ve geçici tıkanmalara yol açıyordu. Zaten
+  // sunucu tarafında 30 dakikalık önbellek var, daha sık denemenin faydası yok.
+  setInterval(refreshFeeds, 10 * 60 * 1000);
 }
 
 async function refreshFeeds(manual = false) {
