@@ -188,9 +188,20 @@ def is_rate_limited(ip):
     return len(history) > RATE_LIMIT_MAX_REQUESTS
 
 class ProxyHandler(http.server.SimpleHTTPRequestHandler):
+    def real_client_ip(self):
+        """Render (ve benzeri) barindirmalar istegi kendi ic proxy'sinden
+        yonlendirdigi icin self.client_address hep 127.0.0.1 gorunuyor.
+        Gercek ziyaretci IP'si X-Forwarded-For basliginda geliyor -
+        (varsa ilk/sol taraftaki deger gercek istemci), yoksa dogrudan
+        baglantidaki adrese donuyoruz (yerelde calisirken bu durum olusur)."""
+        forwarded = self.headers.get("X-Forwarded-For")
+        if forwarded:
+            return forwarded.split(",")[0].strip()
+        return self.client_address[0]
+
     def guard_request(self):
         """Hiz siniri ve bot User-Agent kontrolu. True donerse istek reddedildi demektir."""
-        ip = self.client_address[0]
+        ip = self.real_client_ip()
         if is_rate_limited(ip):
             self.send_response(429)
             self.send_header("Content-Type", "text/plain; charset=utf-8")
@@ -477,7 +488,9 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
 
     def log_message(self, format, *args):
         # Konsolu daha sade tutmak icin varsayilan loglamayi kisaltiyoruz
-        print(f"{self.address_string()} - {format % args}")
+        # (Render arkasinda calisirken self.address_string() hep Render'in
+        # ic proxy adresini verir, bu yuzden gercek IP'yi ayrica yazdiriyoruz)
+        print(f"{self.real_client_ip()} - {format % args}")
 
 
 class ThreadingHTTPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
