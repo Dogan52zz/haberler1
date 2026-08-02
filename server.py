@@ -134,11 +134,13 @@ def load_saved_data():
 
 
 def get_client_bucket(client_id):
-    return SAVED_DATA["clients"].get(client_id, {"saved": [], "read": []})
+    return SAVED_DATA["clients"].get(client_id, {"saved": [], "read": [], "opened": []})
 
 
-def set_client_bucket(client_id, saved, read):
-    SAVED_DATA["clients"][client_id] = {"saved": list(saved), "read": list(read)}
+def set_client_bucket(client_id, saved, read, opened):
+    SAVED_DATA["clients"][client_id] = {
+        "saved": list(saved), "read": list(read), "opened": list(opened),
+    }
     write_saved_data(SAVED_DATA)
 
 
@@ -261,7 +263,12 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
             raw = self.rfile.read(length) if length > 0 else b"{}"
             incoming = json.loads(raw.decode("utf-8") or "{}")
 
-            set_client_bucket(client_id, incoming.get("saved", []), incoming.get("read", []))
+            set_client_bucket(
+                client_id,
+                incoming.get("saved", []),
+                incoming.get("read", []),
+                incoming.get("opened", []),
+            )
 
             self.send_response(200)
             self.send_header("Content-Type", "application/json; charset=utf-8")

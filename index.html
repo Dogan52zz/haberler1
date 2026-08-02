@@ -279,7 +279,8 @@
 
   #status { color: var(--text-faint); font-size: 12.5px; padding: 4px 0 20px; }
 
-  .category-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px; }
+  .category-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; }
+  .category-bar-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin: 0 0 18px; }
   .cat-chip {
     display: inline-flex; align-items: center; gap: 6px;
     border: 1px solid var(--panel-border); background: var(--panel);
@@ -554,7 +555,10 @@
         <div class="ticker-track"><ul id="tickerList"></ul></div>
       </div>
 
-      <div class="category-bar" id="categoryBar"></div>
+      <div class="category-bar-row">
+        <div class="category-bar" id="categoryBar"></div>
+        <button id="openAllSavedBtn" class="refresh-btn" style="display:none">↗ Tümünü yeni sekmede aç</button>
+      </div>
 
       <div class="frontpage-wall" id="frontPageWall"></div>
 
@@ -791,6 +795,7 @@ let renderLimit = 150;
 
 let readSet = new Set();
 let savedItems = new Map(); // key -> haberin tam anlık görüntüsü (beslemeden düşse bile gösterebilmek için)
+let openedTabsSet = new Set(); // "Tümünü yeni sekmede aç" ile daha önce açılmış haberlerin key'leri
 
 let keywordQuery = "";
 let soundEnabled = true;
@@ -1551,7 +1556,28 @@ document.getElementById("controls").addEventListener("click", (e) => {
   document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
   chip.classList.add("active");
   currentFilter = chip.dataset.filter;
+  document.getElementById("openAllSavedBtn").style.display = currentFilter === "saved" ? "" : "none";
   resetLimitAndRender();
+});
+
+document.getElementById("openAllSavedBtn").addEventListener("click", () => {
+  const unopened = [...savedItems.values()].filter(it =>
+    it.isValidLink && it.link && !openedTabsSet.has(it.key)
+  );
+
+  if (unopened.length === 0) {
+    showToast("Yeni açılacak kaydedilmiş haber yok (hepsi zaten açıldı)");
+    return;
+  }
+
+  // Tarayıcılar aynı anda açılan çok sayıda sekmeyi "pop-up" sayıp
+  // engelleyebiliyor; aralarına kısa bir gecikme koyup bunu azaltıyoruz.
+  unopened.forEach((it, i) => {
+    setTimeout(() => window.open(it.link, "_blank", "noopener"), i * 120);
+    openedTabsSet.add(it.key);
+  });
+  persistData();
+  showToast(`${unopened.length} yeni haber sekmelerde açılıyor`);
 });
 
 document.getElementById("sourceList").addEventListener("click", (e) => {
@@ -1760,6 +1786,7 @@ async function loadPersistedData() {
       });
     }
     if (Array.isArray(data.read)) data.read.forEach(k => readSet.add(k));
+    if (Array.isArray(data.opened)) data.opened.forEach(k => openedTabsSet.add(k));
     setPersistStatus(true);
   } catch (e) {
     console.warn("Kayıtlı veriler yüklenemedi:", e);
@@ -1771,7 +1798,11 @@ function persistData() {
   fetch("/data?client=" + encodeURIComponent(CLIENT_ID), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ saved: [...savedItems.values()], read: [...readSet] }),
+    body: JSON.stringify({
+      saved: [...savedItems.values()],
+      read: [...readSet],
+      opened: [...openedTabsSet],
+    }),
   })
     .then(res => { if (!res.ok) setPersistStatus(false, "HTTP " + res.status); })
     .catch(e => {
