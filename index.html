@@ -379,6 +379,13 @@
   .sound-row { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: var(--text-dim); margin-top: 10px; }
   .match-count { font-size: 11px; color: var(--tr); margin-top: 8px; min-height: 14px; }
 
+  .day-summary-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .day-summary-list li { font-size: 12px; line-height: 1.5; color: var(--text-dim); }
+  .day-summary-list .ds-label { display: block; font-size: 10px; letter-spacing: .04em; color: var(--text-faint); text-transform: uppercase; margin-bottom: 2px; }
+  .day-summary-list .ds-value { color: var(--text); font-weight: 600; }
+  .day-summary-list a { color: inherit; text-decoration: none; }
+  .day-summary-list a:hover .ds-value { text-decoration: underline; }
+
   .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .stat-cell { background: var(--bg-raised); border: 1px solid var(--panel-border); border-radius: 8px; padding: 10px; }
   .stat-cell .num { font-family: 'Fraunces', Georgia, serif; font-size: 20px; font-weight: 650; line-height: 1; }
@@ -497,11 +504,43 @@
     .stats-grid { grid-template-columns: repeat(4, 1fr); }
   }
   @media (max-width: 560px) {
-    .page { padding: 0 16px 40px; }
-    h1 { font-size: 30px; }
+    .page { padding: 0 14px 32px; }
+    h1 { font-size: 26px; }
     .stats-grid { grid-template-columns: 1fr 1fr; }
     .item-flex { flex-direction: column; }
     .thumb { width: 100%; height: 140px; }
+
+    /* Üst araç çubuğu: butonlar küçük ekranda eşit genişlikte, dokunmaya uygun */
+    .eyebrow-row { flex-direction: column; align-items: stretch; gap: 10px; }
+    .header-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .refresh-btn { width: 100%; text-align: center; padding: 10px 8px; font-size: 12px; box-sizing: border-box; }
+
+    /* Kategori şeridi: buton alta insin, kategoriler daha kompakt */
+    .category-bar-row { flex-direction: column; align-items: stretch; }
+    .category-bar { gap: 6px; }
+    .cat-chip { font-size: 11px; padding: 5px 9px; }
+    #openAllSavedBtn { width: 100%; }
+
+    /* Şerit (ticker) küçük ekranda daha okunaklı */
+    .ticker-shell { font-size: 12px; }
+    .ticker-label { font-size: 10px; padding: 4px 8px; }
+
+    /* Filtre çipleri (Hepsi/Türkçe/X Haberleri vb.) dokunmaya uygun tam genişlik */
+    .chip { padding: 10px 12px; font-size: 13px; }
+
+    /* Manşet duvarı tek sütuna insin */
+    .frontpage-wall.open { grid-template-columns: 1fr !important; }
+
+    /* Arama kutusu ve kaynak listesi kenar boşlukları */
+    .search-input { font-size: 16px; } /* 16px altı iOS'ta otomatik yakınlaştırma yapıyor */
+    .src-row { padding: 8px 4px; }
+
+    /* Kart içi butonlar (Kaydet/Önizle/Kaynağa git) dokunma alanı büyüsün */
+    .meta .save-btn, .meta .preview-btn, .meta .copy-btn, .meta .source-link { padding: 7px 10px; }
+  }
+
+  @media (max-width: 380px) {
+    .header-btn-group { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -577,6 +616,11 @@
         <input id="keywordInput" class="search-input" type="text" placeholder="örn. deprem">
         <label class="sound-row"><input type="checkbox" id="soundToggle" checked> Sesli uyarı</label>
         <div id="keywordMatchCount" class="match-count"></div>
+      </div>
+
+      <div class="panel-box">
+        <div class="panel-title">Günün özeti</div>
+        <ul class="day-summary-list" id="daySummaryList"></ul>
       </div>
 
       <div class="panel-box">
@@ -1298,6 +1342,69 @@ function renderLatestSidebar() {
   }).join("");
 }
 
+function renderDaySummary() {
+  const ul = document.getElementById("daySummaryList");
+  if (!ul) return;
+
+  const now = Date.now();
+  const DAY = 24 * 60 * 60 * 1000;
+  let dayItems = allItems.filter(it =>
+    !it.isX && it.pubDate && !isNaN(new Date(it.pubDate)) && (now - new Date(it.pubDate).getTime()) < DAY
+  );
+  if (dayItems.length === 0) dayItems = allItems.filter(it => !it.isX);
+
+  if (dayItems.length === 0) {
+    ul.innerHTML = `<li>Henüz yeterli veri yok.</li>`;
+    return;
+  }
+
+  const catCounts = {};
+  dayItems.forEach(it => { catCounts[it.category] = (catCounts[it.category] || 0) + 1; });
+  const topCat = Object.entries(catCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const sourceCounts = {};
+  dayItems.forEach(it => { sourceCounts[it.source] = (sourceCounts[it.source] || 0) + 1; });
+  const topSource = Object.entries(sourceCounts).sort((a, b) => b[1] - a[1])[0];
+
+  const groups = groupSimilar(dayItems).filter(g => g.length > 1);
+  let topGroup = null;
+  let topGroupSourceCount = 0;
+  groups.forEach(g => {
+    const n = new Set(g.map(it => it.source)).size;
+    if (n > topGroupSourceCount) { topGroupSourceCount = n; topGroup = g; }
+  });
+
+  const rows = [];
+  rows.push(`<li><span class="ds-label">Bugün toplam</span><span class="ds-value">${dayItems.length} haber</span></li>`);
+
+  if (topCat) {
+    rows.push(`
+      <li>
+        <span class="ds-label">En çok konuşulan kategori</span>
+        <span class="ds-value" style="${catTagStyle(topCat[0])};padding:2px 7px;border-radius:6px;border:1px solid;display:inline-block">${topCat[0]}</span>
+        <span class="ds-value">· ${topCat[1]} haber</span>
+      </li>`);
+  }
+
+  if (topSource) {
+    rows.push(`<li><span class="ds-label">En aktif kaynak</span><span class="ds-value">${topSource[0]}</span> · ${topSource[1]} haber</li>`);
+  }
+
+  if (topGroup) {
+    const primary = topGroup[0];
+    const linkHtml = primary.isValidLink
+      ? `<a href="${primary.link}" target="_blank" rel="noopener"><span class="ds-value">${primary.title}</span></a>`
+      : `<span class="ds-value">${primary.title}</span>`;
+    rows.push(`
+      <li>
+        <span class="ds-label">En çok kaynakta geçen haber (${topGroupSourceCount} kaynak)</span>
+        ${linkHtml}
+      </li>`);
+  }
+
+  ul.innerHTML = rows.join("");
+}
+
 function renderStats() {
   const regularItems = allItems.filter(it => !it.isX);
   const regularFeeds = FEEDS.filter(f => f.type !== "x");
@@ -1352,6 +1459,7 @@ function render() {
   renderFrontPageWall();
   renderLatestSidebar();
   renderStats();
+  renderDaySummary();
   updateKeywordMatchCount();
   updateSavedChipLabel();
 }
