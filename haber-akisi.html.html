@@ -596,7 +596,10 @@
 
       <div class="category-bar-row">
         <div class="category-bar" id="categoryBar"></div>
-        <button id="openAllSavedBtn" class="refresh-btn" style="display:none">↗ Tümünü yeni sekmede aç</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button id="openAllSavedBtn" class="refresh-btn" style="display:none">↗ Tümünü yeni sekmede aç</button>
+          <button id="clearAllSavedBtn" class="refresh-btn" style="display:none">🗑 Tümünü kaldır</button>
+        </div>
       </div>
 
       <div class="frontpage-wall" id="frontPageWall"></div>
@@ -1665,7 +1668,24 @@ document.getElementById("controls").addEventListener("click", (e) => {
   chip.classList.add("active");
   currentFilter = chip.dataset.filter;
   document.getElementById("openAllSavedBtn").style.display = currentFilter === "saved" ? "" : "none";
+  document.getElementById("clearAllSavedBtn").style.display = currentFilter === "saved" ? "" : "none";
   resetLimitAndRender();
+});
+
+document.getElementById("clearAllSavedBtn").addEventListener("click", () => {
+  if (savedItems.size === 0) {
+    showToast("Zaten kaydedilen haber yok");
+    return;
+  }
+  const count = savedItems.size;
+  const ok = confirm(`${count} kaydedilmiş haberin tamamı kaldırılsın mı? Bu işlem geri alınamaz.`);
+  if (!ok) return;
+
+  savedItems.clear();
+  updateSavedChipLabel();
+  persistData();
+  resetLimitAndRender();
+  showToast(`${count} kaydedilmiş haber kaldırıldı`);
 });
 
 document.getElementById("openAllSavedBtn").addEventListener("click", () => {
