@@ -299,8 +299,10 @@
     border-radius: var(--radius);
     padding: 16px 18px;
     margin-bottom: 12px;
-    transition: opacity .15s ease;
+    transition: opacity .15s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   }
+  .item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); border-color: var(--text-faint); }
+  html[data-theme="light"] .item:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   .item.lang-tr { border-left-color: var(--tr); }
   .item.lang-en { border-left-color: var(--en); }
   .item.is-read { opacity: .5; }
@@ -418,17 +420,27 @@
 
   /* ---------- Manşetler duvarı ---------- */
   .frontpage-wall {
-    display: none; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-    gap: 10px; margin: 0 0 20px;
+    display: none; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px; margin: 0 0 20px;
   }
   .frontpage-wall.open { display: grid; }
-  .fp-card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 10px; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-  .fp-thumb { width: 100%; height: 90px; border-radius: 6px; overflow: hidden; background: var(--bg-raised); }
-  .fp-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .fp-body { padding: 0 2px; }
-  .fp-source { font-size: 10px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; }
-  .fp-card a { color: var(--text); text-decoration: none; font-family: 'Fraunces', Georgia, serif; font-size: 13px; line-height: 1.4; }
-  .fp-card a:hover { text-decoration: underline; text-decoration-color: var(--text-faint); }
+  .fp-card {
+    position: relative; border-radius: 12px; overflow: hidden; height: 200px;
+    border: 1px solid var(--panel-border); background: var(--panel);
+    transition: transform .18s ease, box-shadow .18s ease;
+  }
+  .fp-card:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); }
+  .fp-card.has-img::before {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(0,0,0,.88), rgba(0,0,0,.15) 55%, rgba(0,0,0,0) 75%);
+  }
+  .fp-overlay { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px; }
+  .fp-card:not(.has-img) .fp-overlay { position: static; padding: 12px; }
+  .fp-source { font-size: 10px; color: var(--tr); text-transform: uppercase; letter-spacing: .05em; margin-bottom: 6px; font-weight: 700; }
+  .fp-card.has-img .fp-source { color: #f0c98a; }
+  .fp-card a, .fp-card span { color: var(--text); text-decoration: none; font-family: 'Fraunces', Georgia, serif; font-size: 14px; line-height: 1.4; }
+  .fp-card.has-img a, .fp-card.has-img span { color: #fff; }
+  .fp-card a:hover { text-decoration: underline; text-decoration-color: currentColor; }
 
   /* ---------- Kopyala butonu ---------- */
   .copy-btn {
@@ -876,6 +888,14 @@ function catTagStyle(cat) {
   return `background:var(--cat-${s}-dim);color:var(--cat-${s});border-color:var(--cat-${s})`;
 }
 
+// Kartın kendisine kategoriye göre renk veriyor: sol kenarlıkta kalın bir
+// şerit, hafif bir renk yıkaması (soldan sağa solarak), ve sağ kenarda da
+// ince bir renkli çizgi - kart hem başında hem sonunda kategoriyi taşısın.
+function catCardStyle(cat) {
+  const s = catSlug(cat);
+  return `border-left:4px solid var(--cat-${s});border-right:2px solid var(--cat-${s});background:linear-gradient(90deg, var(--cat-${s}-dim) 0%, var(--panel) 40%)`;
+}
+
 function categorize(title) {
   const t = title.toLocaleLowerCase('tr-TR');
   for (const [cat, words] of Object.entries(CATEGORIES)) {
@@ -1154,7 +1174,7 @@ function itemHtml(it) {
   const encKey = encodeURIComponent(it.key);
 
   return `
-  <div class="item lang-${it.lang}${isRead ? " is-read" : ""}" data-key="${encKey}">
+  <div class="item lang-${it.lang}${isRead ? " is-read" : ""}" data-key="${encKey}" style="${catCardStyle(it.category)}">
     <div class="item-flex">
       ${thumbHtml(it)}
       <div class="item-body">
@@ -1192,7 +1212,7 @@ function groupHtml(group) {
   }).join("");
 
   return `
-  <div class="item group lang-${primary.lang}${isRead ? " is-read" : ""}" data-key="${encPrimaryKey}">
+  <div class="item group lang-${primary.lang}${isRead ? " is-read" : ""}" data-key="${encPrimaryKey}" style="${catCardStyle(primary.category)}">
     <div class="item-flex">
       ${thumbHtml(primary)}
       <div class="item-body">
@@ -1302,11 +1322,20 @@ function renderFrontPageWall() {
   wall.innerHTML = cards.map(it => {
     const inner = it.isValidLink
       ? `<a href="${it.link}" target="_blank" rel="noopener">${it.title}</a>`
-      : `<span style="color:var(--text)">${it.title}</span>`;
-    const img = it.thumbnail
-      ? `<div class="fp-thumb"><img src="${it.thumbnail}" alt="" loading="lazy" onerror="this.parentElement.style.display='none'"></div>`
-      : "";
-    return `<div class="fp-card">${img}<div class="fp-body"><div class="fp-source">${it.source}</div>${inner}</div></div>`;
+      : `<span>${it.title}</span>`;
+    const hasImg = !!it.thumbnail;
+    const s = catSlug(it.category);
+    const bg = hasImg
+      ? `background-image:url('${it.thumbnail}');background-size:cover;background-position:center;`
+      : `background:linear-gradient(150deg, var(--cat-${s}-dim), var(--panel) 70%);`;
+    const sourceStyle = hasImg ? "" : `color:var(--cat-${s});`;
+    return `
+      <div class="fp-card${hasImg ? " has-img" : ""}" style="${bg}">
+        <div class="fp-overlay">
+          <div class="fp-source" style="${sourceStyle}">${it.source}</div>
+          ${inner}
+        </div>
+      </div>`;
   }).join("");
 }
 
