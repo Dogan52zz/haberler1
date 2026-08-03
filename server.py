@@ -134,12 +134,12 @@ def load_saved_data():
 
 
 def get_client_bucket(client_id):
-    return SAVED_DATA["clients"].get(client_id, {"saved": [], "read": [], "opened": []})
+    return SAVED_DATA["clients"].get(client_id, {"saved": [], "read": [], "opened": [], "themes": []})
 
 
-def set_client_bucket(client_id, saved, read, opened):
+def set_client_bucket(client_id, saved, read, opened, themes):
     SAVED_DATA["clients"][client_id] = {
-        "saved": list(saved), "read": list(read), "opened": list(opened),
+        "saved": list(saved), "read": list(read), "opened": list(opened), "themes": list(themes),
     }
     write_saved_data(SAVED_DATA)
 
@@ -279,6 +279,7 @@ class ProxyHandler(http.server.SimpleHTTPRequestHandler):
                 incoming.get("saved", []),
                 incoming.get("read", []),
                 incoming.get("opened", []),
+                incoming.get("themes", []),
             )
 
             self.send_response(200)

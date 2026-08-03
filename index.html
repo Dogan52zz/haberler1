@@ -62,6 +62,32 @@
     --cat-gundem: #92720c; --cat-gundem-dim: #f5ecd0;
   }
 
+  html[data-theme="sepia"] {
+    --bg: #ede2cd;
+    --bg-raised: #e6d8bd;
+    --panel: #f6ecd9;
+    --panel-border: #d8c7a3;
+    --hairline: #e0cfad;
+    --text: #3a2f22;
+    --text-dim: #6b5a42;
+    --text-faint: #8f7c5f;
+    --tr: #9a5b1e;
+    --tr-dim: #e9d2ab;
+    --en: #3c6b57;
+    --en-dim: #d6e5da;
+    --live: #a13a2a;
+
+    --cat-siyaset: #5f4098; --cat-siyaset-dim: #ded1ef;
+    --cat-cinayet: #a3382c; --cat-cinayet-dim: #f0d6cd;
+    --cat-dunya: #2c5a8a; --cat-dunya-dim: #d3e0eb;
+    --cat-ekonomi: #3d7a3f; --cat-ekonomi-dim: #d9e8d3;
+    --cat-magazin: #96375f; --cat-magazin-dim: #ecd6e0;
+    --cat-spor: #9a5518; --cat-spor-dim: #ecdcc7;
+    --cat-teknoloji: #2b7480; --cat-teknoloji-dim: #d3e6e8;
+    --cat-saglik: #397a5e; --cat-saglik-dim: #d5e8de;
+    --cat-gundem: #7a5c10; --cat-gundem-dim: #ecdfba;
+  }
+
   * { box-sizing: border-box; }
 
   body {
@@ -81,7 +107,7 @@
 
   .layout {
     display: grid;
-    grid-template-columns: 300px minmax(0, 1fr) 370px 190px;
+    grid-template-columns: 300px minmax(0, 1fr) 370px;
     gap: 22px;
     align-items: start;
   }
@@ -216,6 +242,20 @@
   .src-row .sname { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .src-row .scount { color: var(--text-faint); font-size: 10.5px; }
 
+  .theme-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  .theme-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 8px; border-radius: 6px; font-size: 11.5px;
+    color: var(--text-dim); cursor: pointer; background: transparent; border: 1px solid transparent;
+  }
+  .theme-row:hover { background: var(--bg-raised); color: var(--text); }
+  .theme-row.active { background: var(--cat-siyaset-dim); border-color: var(--cat-siyaset); color: var(--cat-siyaset); }
+  .theme-row .tname { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .theme-row .tcount { color: var(--text-faint); font-size: 10.5px; }
+  .theme-row .tdel { color: var(--text-faint); font-size: 13px; padding: 0 2px; }
+  .theme-row .tdel:hover { color: var(--live); }
+  .theme-empty-hint { font-size: 11px; color: var(--text-faint); padding: 4px 2px; }
+
   /* ---------- Center column ---------- */
   header.masthead { padding: 34px 0 18px; border-bottom: 1px solid var(--hairline); }
   .eyebrow-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
@@ -302,11 +342,16 @@
     transition: opacity .15s ease, transform .18s ease, box-shadow .18s ease, border-color .18s ease;
   }
   .item:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.25); border-color: var(--text-faint); }
-  html[data-theme="light"] .item:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+  html[data-theme="light"] .item:hover, html[data-theme="sepia"] .item:hover { box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
   .item.lang-tr { border-left-color: var(--tr); }
   .item.lang-en { border-left-color: var(--en); }
   .item.is-read { opacity: .5; }
   .item.is-read .title-link { color: var(--text-dim); }
+  .read-badge {
+    background: #1d3b2a; color: #4fd6a5;
+    font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 6px;
+  }
+  html[data-theme="light"] .read-badge, html[data-theme="sepia"] .read-badge { background: #d9f1e4; color: #1a8f5f; }
 
   .item-flex { display: flex; gap: 14px; }
   .thumb { flex: none; width: 76px; height: 76px; border-radius: 8px; overflow: hidden; background: var(--bg-raised); }
@@ -338,7 +383,10 @@
     border-radius: 6px; padding: 3px 9px; font-family: inherit; font-size: 11px; cursor: pointer;
   }
   .save-btn:hover { color: var(--text); border-color: var(--text-faint); }
-  .save-btn.active { color: var(--tr); border-color: var(--tr); }
+  .save-btn.active {
+    background: var(--tr); border-color: var(--tr); color: #241d0f; font-weight: 700;
+    box-shadow: 0 0 0 3px var(--tr-dim);
+  }
 
   .group-flag {
     font-size: 10.5px; letter-spacing: .04em; color: var(--tr);
@@ -455,6 +503,25 @@
   }
   .preview-btn:hover { color: var(--text); border-color: var(--text-faint); }
   .preview-btn.active { color: var(--tr); border-color: var(--tr); }
+
+  .timeline-btn {
+    background: transparent; border: 1px solid var(--panel-border); border-radius: 8px;
+    padding: 5px 10px; font-size: 11px; color: var(--text-dim); cursor: pointer; font-family: inherit;
+  }
+  .timeline-btn:hover { color: var(--text); border-color: var(--text-faint); }
+  .timeline-btn.active { color: var(--en); border-color: var(--en); }
+  .timeline-content { margin-top: 12px; padding-left: 4px; }
+  .tl-entry { position: relative; padding-left: 20px; padding-bottom: 14px; border-left: 2px solid var(--panel-border); margin-left: 4px; }
+  .tl-entry:last-child { border-left-color: transparent; padding-bottom: 0; }
+  .tl-entry::before {
+    content: ""; position: absolute; left: -5px; top: 2px; width: 8px; height: 8px;
+    border-radius: 50%; background: var(--en); border: 2px solid var(--panel);
+  }
+  .tl-time { font-size: 11px; color: var(--text-faint); }
+  .tl-source { font-size: 11px; font-weight: 700; color: var(--en); margin-left: 6px; }
+  .tl-title { font-size: 13px; color: var(--text); margin-top: 3px; line-height: 1.4; }
+  .tl-title a { color: inherit; text-decoration: none; }
+  .tl-title a:hover { text-decoration: underline; }
   .preview-content {
     margin-top: 12px; padding: 14px; background: var(--bg-raised);
     border: 1px solid var(--panel-border); border-radius: 8px;
@@ -561,16 +628,11 @@
   <div class="layout">
 
     <aside class="sidebar-left">
-      <div class="brand-mini">
-        <div class="mark">Haber Akışı</div>
-        <div class="eyebrow"><span class="dot"></span> Canlı</div>
-        <div id="persistStatus" class="persist-status">💾 Kalıcı depolama kontrol ediliyor…</div>
-      </div>
-
       <input id="searchInput" class="search-input" type="text" placeholder="Haber ara…">
 
       <nav class="filters-vertical" id="controls">
         <div class="chip active" data-filter="all">Hepsi</div>
+        <div class="chip" data-filter="highlights">🎯 Öne Çıkanlar</div>
         <div class="chip" data-filter="tr">Türkçe</div>
         <div class="chip" data-filter="en">İngilizce</div>
         <div class="chip" data-filter="x">X Haberleri</div>
@@ -648,20 +710,6 @@
           <div class="stat-cell"><div class="num" id="statSaved">0</div><div class="lbl">Kaydedilen</div></div>
           <div class="stat-cell"><div class="num" id="statRead">0</div><div class="lbl">Okunan</div></div>
         </div>
-      </div>
-    </aside>
-
-    <aside class="sidebar-x">
-      <div class="panel-box">
-        <div class="panel-title">X hesapları</div>
-        <div class="x-search-row">
-          <input id="xSearchInput" class="search-input" type="text" placeholder="X'te konu/isim ara…">
-          <button id="xSearchBtn" class="mini-btn">🔍 X'te ara</button>
-        </div>
-        <button id="openAllXBtn" class="mini-btn open-all-btn">↗ Tümünü yeni sekmede aç</button>
-        <ul class="x-account-list" id="xAccountList"></ul>
-        <div class="panel-title" style="margin-top: 16px;">Gazeteciler</div>
-        <ul class="x-account-list" id="xPersonList"></ul>
       </div>
     </aside>
 
@@ -832,10 +880,18 @@ function renderXAccountList() {
 // listede daha önce gelen kategori kazanır.
 const CATEGORIES = {
   "Siyaset": ["cumhurbaşkanı","meclis","parti","seçim","bakan","chp","akp","mhp","iyi parti","dem parti","siyaset","hükümet","muhalefet","erdoğan","özgür özel","kılıçdaroğlu","cumhurbaşkanlığı","tbmm","belediye başkanı","belediye meclisi","yolsuzluk","rüşvet","ihaleye fesat","vali"],
-  "Cinayet": ["cinayet","öldürdü","öldürüldü","katletti","katil","silahla vurdu","bıçaklayarak öldür","kurşunla öldür","cesedi bulundu","ceset bulundu","dehşet saçtı","boğazını keserek"],
+  // Not: "öldürdü"/"öldürüldü" gibi tam çekimli kelimeler yerine kök halini
+  // ("öldür", "katlet") kullanıyoruz - matchesWordStart zaten kelime başını
+  // eşleştirdiği için "öldüren", "öldürmüş", "öldürülmüş" gibi TÜM çekimleri
+  // otomatik yakalar. Tam çekim yazmak diğer çekimleri kaçırıyordu.
+  "Cinayet": ["cinayet","öldür","katlet","katil","silahla vurdu","bıçaklayarak öldür","kurşunla öldür","cesedi bulundu","ceset bulundu","dehşet saç","boğazını keserek","döverek öldür"],
   "Dünya": ["abd","rusya","çin","avrupa","nato","birleşmiş milletler","savaş","gazze","israil","iran","war","russia","china","europe","united nations"],
   "Ekonomi": ["dolar","borsa","enflasyon","ekonomi","zam","fiyat","altın","piyasa","economy","market","inflation","stocks"],
-  "Magazin": ["magazin","ünlü","oyuncu","şarkıcı","evlilik","boşandı","boşanma","aşk","sevgili","dizi","instagram","nikah","düğün","aldatma"],
+  // "düğün" ve "nikah" kaldırıldı: bunlar çok genel kelimeler, sıradan
+  // vatandaşların düğününü anlatan yerel haberleri (yangın, bağış vb.)
+  // yanlışlıkla Magazin yapıyordu. Magazin artık daha çok ünlü/dizi/oyuncu
+  // odaklı kelimelere dayanıyor.
+  "Magazin": ["magazin","ünlü","oyuncu","şarkıcı","boşandı","boşanma","aşk hayatı","sevgilisi","dizi","instagram","aldatma","youtuber","fenomen","influencer","podcast","başrol","sosyal medya fenomeni"],
   "Spor": ["gol","maç","lig","transfer","şampiyon","fenerbahçe","galatasaray","beşiktaş","spor","football","match","league","championship"],
   "Teknoloji": ["teknoloji","yapay zeka","apple","google","yazılım","telefon","uygulama","technology"," ai ","software","tech"],
   "Sağlık": ["sağlık","hastane","aşı","virüs","doktor","tedavi","health","hospital","vaccine","virus","disease"],
@@ -846,15 +902,18 @@ let allItems = [];
 const knownKeys = new Set();
 
 let currentFilter = "all";       // all | tr | en | saved
+let groupsByKey = new Map();     // primary.key -> aynı haberi geçen tüm kaynakların listesi (zaman çizelgesi için)
 let currentSources = new Set();  // seçili kaynak adları (çoklu seçim)
 let currentCategory = null;      // seçili kategori (tek seçim, null = tümü)
 let categoryNewCounts = {};      // kategori -> son yenilemeden beri birikmiş yeni haber sayısı
 let searchQuery = "";
-let renderLimit = 150;
+let renderLimit = 20;
 
 let readSet = new Set();
 let savedItems = new Map(); // key -> haberin tam anlık görüntüsü (beslemeden düşse bile gösterebilmek için)
 let openedTabsSet = new Set(); // "Tümünü yeni sekmede aç" ile daha önce açılmış haberlerin key'leri
+let themes = []; // [{ id, name, keywords: [...] }] - kullanıcının kendi tanımladığı temalar
+let currentThemeId = null;      // artık kullanılmıyor (Temalarım kaldırıldı), dokunmadan bırakıldı
 
 let keywordQuery = "";
 let soundEnabled = true;
@@ -1118,6 +1177,14 @@ function getFiltered() {
     const liveKeys = new Set(liveMatched.map(it => it.key));
     const offline = [...savedItems.values()].filter(it => !liveKeys.has(it.key));
     items = [...liveMatched, ...offline];
+  } else if (currentFilter === "theme") {
+    const theme = themes.find(t => t.id === currentThemeId);
+    const kws = theme ? theme.keywords.map(k => k.toLocaleLowerCase('tr-TR')) : [];
+    items = items.filter(it => {
+      if (it.isX) return false;
+      const haystack = (it.title + " " + (it.summary || "")).toLocaleLowerCase('tr-TR');
+      return kws.some(k => k && haystack.includes(k));
+    });
   } else {
     if (currentFilter === "tr" || currentFilter === "en") {
       items = items.filter(it => it.lang === currentFilter);
@@ -1184,6 +1251,7 @@ function itemHtml(it) {
           <span class="badge">${it.source}</span>
           <span class="tag" style="${catTagStyle(it.category)}">${it.category}</span>
           <span>${timeAgo(it.pubDate)}</span>
+          ${isRead ? `<span class="read-badge">✓ Okundu</span>` : ""}
           <button class="save-btn${isSaved ? " active" : ""}" data-key="${encKey}">${isSaved ? "★ Kaydedildi" : "☆ Kaydet"}</button>
           <button class="copy-btn" data-key="${encKey}" title="Başlığı ve linki kopyala">📋</button>
           <button class="preview-btn" data-key="${encKey}">🔍 Önizle</button>
@@ -1203,6 +1271,7 @@ function groupHtml(group) {
   const isRead = readSet.has(primary.key);
   const isSaved = savedItems.has(primary.key);
   const encPrimaryKey = encodeURIComponent(primary.key);
+  groupsByKey.set(primary.key, group);
 
   const chips = group.map(it => {
     const label = it.isValidLink ? it.source : `${it.source} (link yok)`;
@@ -1222,11 +1291,14 @@ function groupHtml(group) {
         <div class="meta">
           <span class="tag" style="${catTagStyle(primary.category)}">${primary.category}</span>
           <span>${timeAgo(primary.pubDate)}</span>
+          ${isRead ? `<span class="read-badge">✓ Okundu</span>` : ""}
           <button class="save-btn${isSaved ? " active" : ""}" data-key="${encPrimaryKey}">${isSaved ? "★ Kaydedildi" : "☆ Kaydet"}</button>
           <button class="copy-btn" data-key="${encPrimaryKey}" title="Başlığı ve linki kopyala">📋</button>
           <button class="preview-btn" data-key="${encPrimaryKey}">🔍 Önizle</button>
+          <button class="timeline-btn" data-key="${encPrimaryKey}">🕒 Zaman Çizelgesi</button>
         </div>
         <div class="preview-content" data-key="${encPrimaryKey}" style="display:none;"></div>
+        <div class="timeline-content" data-key="${encPrimaryKey}" style="display:none;"></div>
         <div class="source-chip-row">${chips}</div>
       </div>
     </div>
@@ -1298,6 +1370,32 @@ function renderSourceList() {
   const clearBtn = document.getElementById("clearSources");
   clearBtn.style.display = currentSources.size > 0 ? "inline" : "none";
   clearBtn.textContent = `Temizle (${currentSources.size})`;
+}
+
+function themeMatchCount(theme) {
+  return allItems.filter(it => {
+    if (it.isX) return false;
+    const haystack = (it.title + " " + (it.summary || "")).toLocaleLowerCase('tr-TR');
+    return theme.keywords.some(k => k && haystack.includes(k.toLocaleLowerCase('tr-TR')));
+  }).length;
+}
+
+function renderThemesList() {
+  const ul = document.getElementById("themeList");
+  if (!ul) return;
+  if (themes.length === 0) {
+    ul.innerHTML = `<li class="theme-empty-hint">Henüz tema eklemedin, aşağıdan ekleyebilirsin.</li>`;
+    return;
+  }
+  ul.innerHTML = themes.map(t => {
+    const count = themeMatchCount(t);
+    const activeCls = (currentFilter === "theme" && currentThemeId === t.id) ? " active" : "";
+    return `<li class="theme-row${activeCls}" data-theme-id="${t.id}">
+      <span class="tname">${t.name}</span>
+      <span class="tcount">${count}</span>
+      <span class="tdel" data-theme-id="${t.id}" title="Temayı sil">✕</span>
+    </li>`;
+  }).join("");
 }
 
 function renderFrontPageWall() {
@@ -1467,7 +1565,13 @@ function updateSavedChipLabel() {
 function render() {
   const list = document.getElementById("list");
   const filtered = getFiltered();
-  const groups = groupSimilar(filtered);
+  let groups = groupSimilar(filtered);
+  if (currentFilter === "highlights") {
+    // Öne Çıkanlar: sadece birden fazla kaynağın geçtiği (yani gerçekten
+    // gündemde olan) haberleri gösteriyoruz - tek kaynaklı dolgu haberler
+    // elenir, liste çok daha kısa ve odaklı kalır.
+    groups = groups.filter(g => g.length > 1);
+  }
   const toShow = groups.slice(0, renderLimit);
 
   if (groups.length === 0) {
@@ -1486,6 +1590,7 @@ function render() {
 
   renderTicker();
   renderSourceList();
+  renderThemesList();
   renderCategoryList();
   renderCategoryBar();
   renderFrontPageWall();
@@ -1497,7 +1602,7 @@ function render() {
 }
 
 function resetLimitAndRender() {
-  renderLimit = 150;
+  renderLimit = 20;
   render();
 }
 
@@ -1696,6 +1801,7 @@ document.getElementById("controls").addEventListener("click", (e) => {
   document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
   chip.classList.add("active");
   currentFilter = chip.dataset.filter;
+  currentThemeId = null;
   document.getElementById("openAllSavedBtn").style.display = currentFilter === "saved" ? "" : "none";
   document.getElementById("clearAllSavedBtn").style.display = currentFilter === "saved" ? "" : "none";
   resetLimitAndRender();
@@ -1773,11 +1879,16 @@ document.getElementById("soundToggle").addEventListener("change", (e) => {
   soundEnabled = e.target.checked;
 });
 
+const THEME_CYCLE = ["dark", "light", "sepia"];
+const THEME_LABELS = { dark: "🌙 Koyu tema", light: "☀️ Açık tema", sepia: "📜 Sepya tema" };
 document.getElementById("themeToggle").addEventListener("click", () => {
   const html = document.documentElement;
-  const isLight = html.dataset.theme === "light";
-  html.dataset.theme = isLight ? "dark" : "light";
-  document.getElementById("themeToggle").textContent = isLight ? "☀️ Açık tema" : "🌙 Koyu tema";
+  const current = THEME_CYCLE.includes(html.dataset.theme) ? html.dataset.theme : "dark";
+  const next = THEME_CYCLE[(THEME_CYCLE.indexOf(current) + 1) % THEME_CYCLE.length];
+  html.dataset.theme = next;
+  // Buton her zaman "bir sonraki tıklama nereye geçirir" diye gösteriyor
+  const afterNext = THEME_CYCLE[(THEME_CYCLE.indexOf(next) + 1) % THEME_CYCLE.length];
+  document.getElementById("themeToggle").textContent = THEME_LABELS[afterNext];
 });
 
 document.getElementById("compactToggle").addEventListener("click", () => {
@@ -1802,36 +1913,10 @@ document.getElementById("broadcastToggle").addEventListener("click", () => {
   document.getElementById("broadcastToggle").textContent = active ? "🎥 Normal görünüm" : "🎥 Yayın modu";
 });
 
-function openXSearch() {
-  const input = document.getElementById("xSearchInput");
-  const q = input.value.trim();
-  if (!q) return;
-  window.open("https://x.com/search?q=" + encodeURIComponent(q) + "&src=typed_query", "_blank");
-}
-document.getElementById("xSearchBtn").addEventListener("click", openXSearch);
-document.getElementById("xSearchInput").addEventListener("keydown", (e) => {
-  if (e.key === "Enter") openXSearch();
-});
-
-document.getElementById("openAllXBtn").addEventListener("click", () => {
-  const links = document.querySelectorAll("#xAccountList a.x-account-row, #xPersonList a.x-account-row");
-  let opened = 0;
-  links.forEach((a, i) => {
-    const win = window.open(a.href, "x_tab_" + i);
-    if (win) opened++;
-  });
-  const blocked = links.length - opened;
-  if (blocked > 0) {
-    showToast(`${opened} sekme açıldı, ${blocked} tanesi engellendi — adres çubuğundaki 🚫 simgesine tıklayıp "Her zaman izin ver" seç, sonra tekrar dene`);
-  } else {
-    showToast(`${links.length} X hesabı yeni sekmelerde açıldı`);
-  }
-});
-
 document.getElementById("list").addEventListener("click", (e) => {
   const loadMore = e.target.closest("#loadMoreBtn");
   if (loadMore) {
-    renderLimit += 150;
+    renderLimit += 20;
     render();
     return;
   }
@@ -1889,6 +1974,40 @@ document.getElementById("list").addEventListener("click", (e) => {
     return;
   }
 
+  const timelineBtn = e.target.closest(".timeline-btn");
+  if (timelineBtn) {
+    const key = decodeURIComponent(timelineBtn.dataset.key);
+    const itemEl = timelineBtn.closest(".item");
+    const container = itemEl?.querySelector(".timeline-content");
+    if (!container) return;
+
+    const isOpen = container.style.display !== "none";
+    if (isOpen) {
+      container.style.display = "none";
+      timelineBtn.textContent = "🕒 Zaman Çizelgesi";
+      timelineBtn.classList.remove("active");
+    } else {
+      const group = groupsByKey.get(key) || [];
+      const sorted = [...group].sort((a, b) => new Date(a.pubDate) - new Date(b.pubDate));
+      container.innerHTML = sorted.map(it => {
+        const titleHtml = it.isValidLink
+          ? `<a href="${it.link}" target="_blank" rel="noopener">${it.title}</a>`
+          : it.title;
+        return `
+          <div class="tl-entry">
+            <span class="tl-time">${timeAgo(it.pubDate)}</span>
+            <span class="tl-source">${it.source}</span>
+            <div class="tl-title">${titleHtml}</div>
+          </div>`;
+      }).join("");
+      container.style.display = "block";
+      timelineBtn.textContent = "🕒 Gizle";
+      timelineBtn.classList.add("active");
+    }
+    return;
+  }
+
+
   const a = e.target.closest("a[data-key]");
   if (a) {
     const key = decodeURIComponent(a.dataset.key);
@@ -1944,6 +2063,7 @@ async function loadPersistedData() {
     }
     if (Array.isArray(data.read)) data.read.forEach(k => readSet.add(k));
     if (Array.isArray(data.opened)) data.opened.forEach(k => openedTabsSet.add(k));
+    if (Array.isArray(data.themes)) themes = data.themes;
     setPersistStatus(true);
   } catch (e) {
     console.warn("Kayıtlı veriler yüklenemedi:", e);
@@ -1959,6 +2079,7 @@ function persistData() {
       saved: [...savedItems.values()],
       read: [...readSet],
       opened: [...openedTabsSet],
+      themes,
     }),
   })
     .then(res => { if (!res.ok) setPersistStatus(false, "HTTP " + res.status); })
